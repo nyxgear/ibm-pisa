@@ -27,7 +27,7 @@ RUN cd $LLVM_ROOT                                                               
     mkdir llvm-install                                                          && \
     cd llvm-build                                                               && \
     ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
-    make -j4  # for LLVM 3.5 or newer also add --enable-cxx11=yes               && \
+    make -j4                                                                    && \
     make install
 
 # Trigger the next build stage
