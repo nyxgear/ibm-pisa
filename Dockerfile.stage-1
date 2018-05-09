@@ -26,11 +26,9 @@ RUN cd $LLVM_ROOT                                                               
     mkdir llvm-build                                                            && \
     mkdir llvm-install                                                          && \
     cd llvm-build                                                               && \
-    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install
-
-# for LLVM 3.5 or newer also add --enable-cxx11=yes
-RUN make -j4
-RUN make install
+    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
+    make -j4  # for LLVM 3.5 or newer also add --enable-cxx11=yes               && \
+    make install
 
 # Trigger the next build stage
 RUN curl -X POST https://registry.hub.docker.com/u/nyxgear/ibm-pisa/trigger/90555bcd-a079-4319-b2a4-108014dccf61/ \
