@@ -67,6 +67,6 @@ This project has been developed for the [Advanced Computer Architecture course]
 [LLVM compiler infrastructure]: http://llvm.org/
 [IBM-PISA-related projects]: http://researcher.watson.ibm.com/researcher/view_group_pubs.php?grp=6395
 [IBM-PISA IJPP Paper]: https://doi.org/10.1007/s10766-016-0410-0
-[nyxgear/ibm-pisa]: https://hub.docker.com/r/nyxgear/nyxgear/ibm-pisa/
+[nyxgear/ibm-pisa]: https://hub.docker.com/r/nyxgear/ibm-pisa
 [Advanced Computer Architecture course]: https://www4.ceda.polimi.it/manifesti/manifesti/controller/ManifestoPublic.do?EVN_DETTAGLIO_RIGA_MANIFESTO=evento&aa=2017&k_cf=225&k_corso_la=481&k_indir=T2A&codDescr=088949&lang=IT&semestre=2&anno_corso=1&idItemOfferta=131292&idRiga=216832
 
