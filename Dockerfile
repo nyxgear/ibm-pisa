@@ -1,4 +1,2 @@
-FROM nyxgear/ibm-pisa:stage-0
+FROM nyxgear/ibm-pisa:stage-1
 MAINTAINER nyxgear <dev@nyxgear.com>
-
-RUN echo "Test"
