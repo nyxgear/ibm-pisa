@@ -1,4 +1,4 @@
-FROM nyxgear/ibm-pisa:stage-3
+FROM nyxgear/ibm-pisa:stage-4
 MAINTAINER nyxgear <dev@nyxgear.com>
 
 ##################################
