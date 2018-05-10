@@ -1,8 +1,8 @@
-FROM nyxgear/ibm-pisa:stage-1
+FROM nyxgear/ibm-pisa:stage-3
 MAINTAINER nyxgear <dev@nyxgear.com>
 
 ##################################
-# BUILDING STAGE 2
+# BUILDING STAGE 4
 ##################################
 
 WORKDIR /ibm-pisa
