@@ -20,7 +20,7 @@ RUN apt-get install -y  \
 
 RUN apt-get autoremove
 
-# Create installation dir
+# Create installation directory
 RUN mkdir /ibm-pisa
 
 # Trigger the next build stage
