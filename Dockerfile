@@ -1,24 +1,22 @@
-FROM nyxgear/ibm-pisa:stage-1
+FROM nyxgear/ibm-pisa:stage-2
 MAINTAINER nyxgear <dev@nyxgear.com>
 
 ##################################
-# BUILDING STAGE 2
+# BUILDING STAGE 3
 ##################################
 
 WORKDIR /ibm-pisa
 
 ENV LLVM_ROOT=/ibm-pisa
 
-# 4. OpenMP installation
-# Download the OpenMP runtime library and extract the archive:
-# https://www.openmprtl.org/download#stable-releases
+# 4. Rebuild LLVM (configure, compile and install)
+ENV LLVM_ENABLE_THREADS=1
 RUN cd $LLVM_ROOT                                                               && \
-    wget https://www.openmprtl.org/sites/default/files/libomp_20160808_oss.tgz  && \
-    tar -xzvf libomp_20160808_oss.tgz                                           && \
-    cd libomp_oss                                                               && \
-    OPENMP_DIR=$(pwd)                                                           && \
-    make compiler=gcc
+    cd llvm-build                                                               && \
+    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
+    make -j4                                                                    && \
+    make install
 
 # Trigger the next build stage
 RUN curl -X POST https://registry.hub.docker.com/u/nyxgear/ibm-pisa/trigger/90555bcd-a079-4319-b2a4-108014dccf61/ \
-         -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "master"}'
+         -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "stage-4"}'
