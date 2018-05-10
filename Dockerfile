@@ -9,16 +9,13 @@ WORKDIR /ibm-pisa
 
 ENV LLVM_ROOT=/ibm-pisa
 
-# 4. OpenMP installation
-# Download the OpenMP runtime library and extract the archive:
-# https://www.openmprtl.org/download#stable-releases
+# 4. Rebuild LLVM (configure, compile and install) - PT 2
+ENV LLVM_ENABLE_THREADS=1
 RUN cd $LLVM_ROOT                                                               && \
-    wget https://www.openmprtl.org/sites/default/files/libomp_20160808_oss.tgz  && \
-    tar -xzvf libomp_20160808_oss.tgz                                           && \
-    cd libomp_oss                                                               && \
-    OPENMP_DIR=$(pwd)                                                           && \
-    make compiler=gcc
+    cd llvm-build                                                               && \
+    make -j4                                                                    && \
+    make install
 
 # Trigger the next build stage
 RUN curl -X POST https://registry.hub.docker.com/u/nyxgear/ibm-pisa/trigger/90555bcd-a079-4319-b2a4-108014dccf61/ \
-         -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "master"}'
+         -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "stage-5"}'
