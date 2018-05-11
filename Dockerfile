@@ -13,7 +13,6 @@ ENV LLVM_ROOT=/ibm-pisa
 ENV LLVM_ENABLE_THREADS=1
 RUN cd $LLVM_ROOT                                                               && \
     cd llvm-build                                                               && \
-    make -j4                                                                    && \
     make install
 
 # Trigger the next build stage
