@@ -9,11 +9,12 @@ WORKDIR /ibm-pisa
 
 ENV LLVM_ROOT=/ibm-pisa
 
-# 4. Rebuild LLVM (configure, compile and install)
+# 4. Rebuild LLVM (configure, compile and install) - PT 1
 ENV LLVM_ENABLE_THREADS=1
 RUN cd $LLVM_ROOT                                                               && \
     cd llvm-build                                                               && \
-    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install
+    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
+    make -j4
 
 # Trigger the next build stage
 RUN curl -X POST https://registry.hub.docker.com/u/nyxgear/ibm-pisa/trigger/90555bcd-a079-4319-b2a4-108014dccf61/ \
