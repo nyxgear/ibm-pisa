@@ -20,25 +20,16 @@ RUN apt-get install -y  \
 
 RUN apt-get autoremove
 
-# Create installation directory
-RUN mkdir /ibm-pisa
+# Create llvm-root directory
+RUN mkdir /llvm-root
 
-WORKDIR /ibm-pisa
+WORKDIR /llvm-root
 
-ENV LLVM_ROOT=/ibm-pisa
+ENV LLVM_ROOT=/llvm-root
 
 # 1. Get the LLVM source code
-RUN wget -q http://llvm.org/releases/3.4/llvm-3.4.src.tar.gz && \
+RUN wget -q http://llvm.org/releases/3.4/llvm-3.4.src.tar.gz                    && \
     tar -xzvf llvm-3.4.src.tar.gz
-
-
-# 3. Configure, compile and install clang
-# We will use clang with openMP support (x86_64 architectures).
-# For other architectures use the official clang version.
-RUN cd $LLVM_ROOT                                                               && \
-    git clone https://github.com/clang-omp/clang llvm-3.4/tools/clang           && \
-    cd llvm-3.4/tools/clang                                                     && \
-    git checkout 34 # clang version for LLVM 3.4
 
 
 # 2. Configure, compile and install LLVM
