@@ -23,6 +23,30 @@ RUN apt-get autoremove
 # Create installation directory
 RUN mkdir /ibm-pisa
 
-# Trigger the next build stage
-RUN curl -X POST https://registry.hub.docker.com/u/nyxgear/ibm-pisa/trigger/90555bcd-a079-4319-b2a4-108014dccf61/ \
-         -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "stage-1"}'
+WORKDIR /ibm-pisa
+
+ENV LLVM_ROOT=/ibm-pisa
+
+# 1. Get the LLVM source code
+RUN wget -q http://llvm.org/releases/3.4/llvm-3.4.src.tar.gz && \
+    tar -xzvf llvm-3.4.src.tar.gz
+
+
+# 3. Configure, compile and install clang
+# We will use clang with openMP support (x86_64 architectures).
+# For other architectures use the official clang version.
+RUN cd $LLVM_ROOT                                                               && \
+    git clone https://github.com/clang-omp/clang llvm-3.4/tools/clang           && \
+    cd llvm-3.4/tools/clang                                                     && \
+    git checkout 34 # clang version for LLVM 3.4
+
+
+# 2. Configure, compile and install LLVM
+ENV LLVM_ENABLE_THREADS=1
+RUN cd $LLVM_ROOT                                                               && \
+    mkdir llvm-build                                                            && \
+    mkdir llvm-install                                                          && \
+    cd llvm-build                                                               && \
+    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
+    make -j4                                                                    && \
+    make install
