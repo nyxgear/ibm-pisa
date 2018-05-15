@@ -33,6 +33,17 @@ RUN wget -q http://llvm.org/releases/3.4/llvm-3.4.src.tar.gz                    
     tar -xzvf llvm-3.4.src.tar.gz
 
 
+# 3. Configure, compile and install clang
+# We will use clang with openMP support (x86_64 architectures).
+# For other architectures use the official clang version.
+RUN cd $LLVM_ROOT                                                               && \
+    git clone https://github.com/clang-omp/clang llvm-3.4/tools/clang           && \
+    cd llvm-3.4/tools/clang                                                     && \
+    git checkout 34 # clang version for LLVM 3.4
+# 4. Rebuild LLVM (configure, compile and install)
+
+# Configure, compile and install LLVM is done only once: with also included clang
+
 # 2. Configure, compile and install LLVM
 ENV LLVM_ENABLE_THREADS=1
 RUN cd $LLVM_ROOT                                                               && \
