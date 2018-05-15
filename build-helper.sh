@@ -3,7 +3,7 @@ echo_help() {
 echo "
     This script is useful to automatically build the image sateges in sequence.
     
-        ./build-helper.sh [-f | --from-stage <[0-9]+>]] [-t | --to-stage <[0-9]+>] [--complete-build] 
+        ./build-helper.sh [-f | --from-stage <[0-9]+>]] [-t | --to-stage <[0-9]+>] [--complete-build] [--push] 
 
 
     It can be used to build the complete image, from stage-0 to the last one:
@@ -17,6 +17,8 @@ echo "
 
     or starting from one stage till another one:
     ./build-helper.sh --from-stage [0-9]+ --to-stage [0-9]+
+
+    Also, if you want to push each stage once build add the parameter: --push
 "
 }
 
@@ -25,12 +27,16 @@ if [[ $# -eq 0 ]]; then
     exit
 fi
 
+# Repo name
+REPO="nyxgear/ibm-pisa"
+
 # Detect last stage file
 LAST_STAGE_FILE=$(find . -name 'Dockerfile.stage-*' | sort | tail -n 1 -)
 LAST_STAGE_NUMBER=$(echo $LAST_STAGE_FILE | sed "s/\.\/Dockerfile.stage-//g")
 
 # Initialization
 COMPLETE=0
+PUSH=0
 BUILD_FROM=0
 BUILD_TO=$LAST_STAGE_NUMBER
 BUILD_LATEST=1
@@ -44,6 +50,11 @@ do
     case $key in
         --complete)
         COMPLETE=1
+        shift # past argument
+        shift # past value
+        ;;
+        --push)
+        PUSH=1
         shift # past argument
         shift # past value
         ;;
@@ -88,9 +99,14 @@ do
     echo "
 
 ################################################################################
-build-helper.sh: building STAGE $STAGE
+build-helper.sh: building STAGE $REPO:stage-$STAGE
 "
-    docker build --tag nyxgear/ibm-pisa:stage-$STAGE -f Dockerfile.stage-$STAGE .
+    docker build --tag $REPO:stage-$STAGE -f Dockerfile.stage-$STAGE .
+
+    # push
+    if ((PUSH)); then 
+        docker push $REPO:stage-$STAGE
+    fi
     ((STAGE++))
 done
 
@@ -99,7 +115,12 @@ if ((BUILD_LATEST)); then
     echo "
 
 ################################################################################
-build-helper.sh: building latest stage: nyxgear/ibm-pisa:latest
+build-helper.sh: building latest stage: $REPO:latest
 "
-    docker build --tag nyxgear/ibm-pisa:latest -f Dockerfile .
+    docker build --tag $REPO:latest -f Dockerfile .
+    
+    # push
+    if ((PUSH)); then 
+        docker push $REPO:stage-$STAGE
+    fi
 fi
