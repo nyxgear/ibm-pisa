@@ -19,7 +19,9 @@ RUN apt-get install -y  \
     cmake               \
     groff               \
     autoconf            \
-    libboost-all-dev
+    libboost-all-dev    \
+    libncurses5-dev     \
+    lib32z1-dev
 
 RUN apt-get autoremove
 
