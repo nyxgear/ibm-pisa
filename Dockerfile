@@ -218,3 +218,13 @@ RUN cd $ANALYSIS_ROOT_DIR/library                                               
 # # After setting these variables, run 'source my_env.sh'.
 # ```
 
+# Finalize image
+
+COPY startup.sh /startup.sh
+
+RUN chmod +x /startup.sh                                                        && \
+    mkdir /llvm-root/ibm-pisa/example-compile-profile/compile/app
+
+WORKDIR /llvm-root/ibm-pisa/example-compile-profile/compile/app
+
+CMD ["/startup.sh"]
