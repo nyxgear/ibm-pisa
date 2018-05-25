@@ -1,19 +1,204 @@
-FROM nyxgear/ibm-pisa:stage-2
+FROM debian:9
 MAINTAINER nyxgear <dev@nyxgear.com>
 
-######################################################
-# IBM-PISA TOOL final installation stage
-######################################################
 
+################################################################################
+# BUILDING STAGE 0
+################################################################################
+
+# Update dependencies
+RUN apt-get update --fix-missing && \
+    apt-get upgrade -y
+
+# Install required packages
+RUN apt-get install -y  \
+    vim                 \
+    curl                \
+    wget                \
+    build-essential     \
+    python              \
+    git                 \
+    cmake               \
+    groff               \
+    autoconf            \
+    libboost-all-dev    \
+    libncurses5-dev     \
+    lib32z1-dev
+
+RUN apt-get autoremove
+
+# Create llvm-root directory
+RUN mkdir /llvm-root
+
+WORKDIR /llvm-root
+
+ENV LLVM_ROOT=/llvm-root
+
+# 1. Get the LLVM source code
+RUN wget -q http://llvm.org/releases/3.4/llvm-3.4.src.tar.gz                    && \
+    tar -xzvf llvm-3.4.src.tar.gz
+
+
+# 3. Configure, compile and install clang
+# We will use clang with openMP support (x86_64 architectures).
+# For other architectures use the official clang version.
+RUN cd $LLVM_ROOT                                                               && \
+    git clone https://github.com/clang-omp/clang llvm-3.4/tools/clang           && \
+    cd llvm-3.4/tools/clang                                                     && \
+    git checkout 34 # clang version for LLVM 3.4
+# 4. Rebuild LLVM (configure, compile and install)
+
+# Configure, compile and install LLVM is done only once: with also included clang
+
+# 2. Configure, compile and install LLVM
+ENV LLVM_ENABLE_THREADS=1
+RUN cd $LLVM_ROOT                                                               && \
+    mkdir llvm-build                                                            && \
+    mkdir llvm-install                                                          && \
+    cd llvm-build                                                               && \
+    ../llvm-3.4/configure --enable-optimized --prefix=$LLVM_ROOT/llvm-install   && \
+    make -j4                                                                    && \
+    make install
+
+
+################################################################################
+# BUILDING STAGE 1
+################################################################################
+
+WORKDIR /llvm-root
+
+ENV LLVM_ROOT=/llvm-root
+ENV OPENMP_DIR=/llvm-root/libomp_oss
+ENV MPI_DIR=/llvm-root/openmpi-1.10.2
+
+# 5. OpenMP installation
+# Download the OpenMP runtime library and extract the archive:
+# https://www.openmprtl.org/download#stable-releases
+RUN cd $LLVM_ROOT                                                               && \
+    wget https://www.openmprtl.org/sites/default/files/libomp_20160808_oss.tgz  && \
+    tar -xzvf libomp_20160808_oss.tgz                                           && \
+    cd $OPENMP_DIR                                                              && \
+    make compiler=gcc
+
+# 6. OpenMPI installation
+# Install OpenMPI and extract the archive (currently tested versions: 1.8.6 and 1.10.2):
+# http://www.open-mpi.org/software/ompi/
+RUN cd $LLVM_ROOT                                                               && \
+    wget https://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.2.tar.gz && \
+    tar -xzvf openmpi-1.10.2.tar.gz                                             && \
+    cd $MPI_DIR                                                                 && \
+    ./configure --prefix $MPI_DIR                                               && \
+    make all install
+
+# 7. RapidJSON installation
+# If cmake is not install, run: sudo apt-get install cmake
+RUN cd $LLVM_ROOT                                                               && \
+    git clone https://github.com/miloyip/rapidjson                              && \
+    cd rapidjson                                                                && \
+    mkdir build                                                                 && \
+    cd build                                                                    && \
+    cmake ..                                                                    && \
+    make
+# The user might need to edit the file 'rapidjson/build/example/CMakeFiles/lookaheadparser.dir/flags.make':
+# Remove flags -Weffc++ and -Wswitch-default
+
+
+
+
+################################################################################
+# BUILDING STAGE 2
+################################################################################
+
+WORKDIR /llvm-root
+
+ENV LLVM_ROOT=/llvm-root
+ENV ANALYSIS_ROOT_DIR=/llvm-root/ibm-pisa
+
+
+# 8. Configure and compile the analysis pass and the library
+RUN cd $LLVM_ROOT                                                               && \
+    git clone https://github.com/exabounds/ibm-pisa.git
+    # cd ibm-pisa
+    # export ANALYSIS_ROOT_DIR=$(pwd)
+    # Copy my_env.sh and set the local paths.
+    # (Re)Edit the my_env.sh file to change the paths accordingly.
+    # source my_env.sh
+
+# seting up env variables
+
+# set to $LLVM_ROOT/llvm-install
+ENV PISA_ROOT=/llvm-root
+ENV LLVM_INSTALL=$PISA_ROOT/llvm-install
+ENV LLVM_BUILD=$PISA_ROOT/llvm-build
+ENV LLVM_SRC=$PISA_ROOT/llvm-3.4
+
+# set to $OPENMP_DIR
+ENV OPENMP_DIR=$PISA_ROOT/libomp_oss
+
+# set to $MPI_DIR
+ENV MPI_DIR=$PISA_ROOT/openmpi-1.10.2
+
+# set to include dir of rapidjson library
+ENV RAPID_JSON=$PISA_ROOT/rapidjson/include
+
+ENV PATH=$MPI_DIR/bin:$LLVM_INSTALL/bin:$PATH
+
+ENV C_INCLUDE_PATH=$MPI_DIR/include:$LLVM_INSTALL/include:$OPENMP_DIR/exports/common/include
+ENV C_INCLUDE_PATH=$RAPID_JSON:$C_INCLUDE_PATH
+ENV CPLUS_INCLUDE_PATH=$MPI_DIR/include:$LLVM_INSTALL/include:$OPENMP_DIR/exports/common/include
+ENV CPLUS_INCLUDE_PATH=$RAPID_JSON:$CPLUS_INCLUDE_PATH
+
+ENV LIBRARY_PATH=$MPI_DIR/lib:$MPI_DIR/lib/openmpi:$LLVM_INSTALL/lib:$OPENMP_DIR/exports/lin_32e/lib
+ENV LD_LIBRARY_PATH=$MPI_DIR/lib:$MPI_DIR/lib/openmpi:$LLVM_INSTALL/lib:$OPENMP_DIR/exports/lin_32e/lib
+ENV LD_RUN_PATH=$MPI_DIR/lib:$MPI_DIR/lib/openmpi:$LD_RUN_PATH
+
+# AFTER building the analysis pass:
+
+
+# # Set ANALYSIS_LIB_PATH
+ENV COUPLED_PASS_PATH=$PISA_ROOT/analysis-install/lib
+# ENV DECOUPLED_PASS_PATH=$PISA_ROOT/PISApass-decoupled-install/lib
+
+# Set LIB_PATH
+ENV PISA_LIB_PATH=$PISA_ROOT/ibm-pisa/library
+
+ENV LD_LIBRARY_PATH=$PISA_LIB_PATH:$LD_LIBRARY_PATH
+
+## This variable is used for automatic generation and verification of tests outputs
+ENV PISA_EXAMPLES=$PISA_ROOT/ibm-pisa/example-compile-profile
+
+## Analyze FORTRAN code with Dragonegg + LLVM-3.5.2
+# ENV GCC=gcc-4.8
+# ENV CC=gcc-4.8
+# ENV CXX=g++-4.8
+# ENV CFORTRAN=gcc-4.8
+# ENV DRAGONEGG_PATH=$PISA_ROOT/dragonegg-3.5.2.src
+# ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PISA_LIB_PATH:$DRAGONEGG_PATH
+# ENV LIBRARY_PATH=$LIBRARY_PATH:$PISA_LIB_PATH:$DRAGONEGG_PATH
+
+## Additional PISA inputs and outputs
+# ENV PISAFileName=output.json
+# ENV AddJSONData=header.json
+
+## Print PISA output in JSON pretty print
+ENV PRETTYPRINT=$PISA_ROOT/ibm-pisa/example-compile-profile/prettyPrint.sh
+
+
+
+
+
+################################################################################
+# BUILDING STAGE: final installation stage
+################################################################################
 ENV TMP_LLVM_SAMPLE_SRC=$LLVM_ROOT/llvm-3.4/projects/sample
 
 
 # 8. Install the LLVM Pass (this pass instruments the LLVM bitcode with library calls)
 # First, prepare the passCoupled folder (the same applies for passDecoupled) to have the following structure:
 
-#############################################################
+##############
 # passCoupled
-#############################################################
+##############
 RUN cd $PISA_ROOT/ibm-pisa                                                              && \
     cd passCoupled                                                                      && \
 
@@ -115,10 +300,9 @@ RUN cd $ANALYSIS_ROOT_DIR/library                                               
 # # After setting these variables, run 'source my_env.sh'.
 
 
-
-#############################################################
+################
 # passDecoupled
-#############################################################
+################
 RUN cd $PISA_ROOT/ibm-pisa                                                              && \
     cd passDecoupled                                                                    && \
 
@@ -218,8 +402,22 @@ RUN cd $ANALYSIS_ROOT_DIR/library                                               
 # # After setting these variables, run 'source my_env.sh'.
 # ```
 
-# Finalize image
 
+################################################################################
+# Finalize image
+################################################################################
+# remove useless build files
+RUN cd /llvm-root                                                               && \
+    rm -r analysis-build \
+          libomp_20160808_oss.tgz \
+          llvm-3.4.src.tar.gz \
+          openmpi-1.10.2.tar.gz \
+          llvm-build
+
+# some aliases
+RUN  echo "alias ll='ls -alF'\nalias la='ls -A'\nalias l='ls -CF'" > /root/.bashrc
+
+# Copy the startup script
 COPY startup.sh /startup.sh
 
 RUN chmod +x /startup.sh                                                        && \
@@ -227,4 +425,5 @@ RUN chmod +x /startup.sh                                                        
 
 WORKDIR /llvm-root/ibm-pisa/example-compile-profile/compile/app
 
+# Execute the startup script if no other command overwrite the below one
 CMD ["/startup.sh"]
