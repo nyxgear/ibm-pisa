@@ -414,6 +414,11 @@ RUN cd /llvm-root                                                               
           openmpi-1.10.2.tar.gz \
           llvm-build
 
+# delete useless files and softwares
+RUN rm -rf /lib32 /var /usr/lib32 /usr/libx32 /usr/share /usr/lib/python2.7 \
+    /usr/lib/python3.5
+
+
 # some aliases
 RUN  echo "alias ll='ls -alF'\nalias la='ls -A'\nalias l='ls -CF'" > /root/.bashrc
 
