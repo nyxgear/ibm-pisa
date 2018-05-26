@@ -120,6 +120,8 @@ A build of this image can be found at [nyxgear/ibm-pisa] on Docker Hub.
 This project has been developed for the [Advanced Computer Architecture course]
 (A.Y. 2017/2018) at Politecnico di Milano.
 
+[IBM-PISA Docker Image - Project presentation slides]
+
 
 [IBM Platform-Independent Software Analysis]: https://github.com/exabounds/ibm-pisa
 [official repository]: https://github.com/exabounds/ibm-pisa
@@ -129,3 +131,5 @@ This project has been developed for the [Advanced Computer Architecture course]
 [official Docker installation page]: https://docs.docker.com/install
 [nyxgear/ibm-pisa]: https://hub.docker.com/r/nyxgear/ibm-pisa
 [Advanced Computer Architecture course]: https://www4.ceda.polimi.it/manifesti/manifesti/controller/ManifestoPublic.do?EVN_DETTAGLIO_RIGA_MANIFESTO=evento&aa=2017&k_cf=225&k_corso_la=481&k_indir=T2A&codDescr=088949&lang=IT&semestre=2&anno_corso=1&idItemOfferta=131292&idRiga=216832
+[IBM-PISA Docker Image - Project presentation slides]: https://docs.google.com/presentation/d/1i6IzoTgxiVove5Bx0kXW_QS9FhbaG_RBzOjswrP3nwE
+
